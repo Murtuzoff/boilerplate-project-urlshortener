@@ -9,10 +9,22 @@ const bodyParser = require("body-parser");
 const app = express();
 const port = process.env.PORT || 3000;
 
-const sequelize = new Sequelize(process.env.POSTGRES_URL, {
-  dialect: "postgres",
-  dialectModule: pg,
-});
+const sequelize = new Sequelize(
+  process.env.DB_NAME,
+  process.env.DB_USER,
+  process.env.DB_PASS,
+  {
+    dialect: "postgres",
+    dialectModule: pg,
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    dialectOptions: {
+      ssl: {
+        require: true,
+      },
+    },
+  }
+);
 
 const Url = sequelize.define("url", {
   original_url: {
