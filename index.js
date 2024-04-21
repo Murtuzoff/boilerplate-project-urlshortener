@@ -1,13 +1,14 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const { Sequelize, DataTypes } = require("sequelize");
-const pg = require("pg");
 const validURL = require("valid-url");
 const bodyParser = require("body-parser");
-
 const app = express();
+
 const port = process.env.PORT || 3000;
+
+const { Sequelize, DataTypes } = require("sequelize");
+const pg = require("pg");
 
 const sequelize = new Sequelize(
   process.env.DB_NAME,
@@ -53,10 +54,10 @@ connectDatabase();
 
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use("/public", express.static(`${process.cwd()}/public`));
+app.use(express.static(__dirname + "/public"));
 
 app.get("/", (req, res) => {
-  res.sendFile(process.cwd() + "/views/index.html");
+  res.sendFile(__dirname + "/views/index.html");
 });
 
 app.get("/api/shorturl/:num", async (req, res) => {
