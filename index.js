@@ -8,17 +8,7 @@ const bodyParser = require("body-parser");
 const app = express();
 const port = process.env.PORT || 3000;
 
-const sequelize = new Sequelize(
-  "postgres://default:bIADht2xf6UT@ep-solitary-cake-a2fss3zi.eu-central-1.aws.neon.tech:5432/verceldb",
-  {
-    dialect: "postgres",
-    dialectOptions: {
-      ssl: {
-        require: true,
-      },
-    },
-  }
-);
+const sequelize = new Sequelize(process.env.POSTGRES_URL);
 
 const Url = sequelize.define("url", {
   original_url: {
