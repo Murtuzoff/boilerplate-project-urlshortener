@@ -28,6 +28,11 @@ const sequelize = new Sequelize(
 );
 
 const Url = sequelize.define("url", {
+  _id: {
+    type: DataTypes.UUID,
+    defaultValue: sequelize.literal("uuid_generate_v4()"),
+    primaryKey: true,
+  },
   original_url: {
     type: DataTypes.STRING,
     allowNull: false,
