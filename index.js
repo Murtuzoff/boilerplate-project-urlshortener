@@ -98,6 +98,7 @@ app.post("/api/shorturl", async (req, res) => {
     const testUrl = `${baseUrl}/api/shorturl/${newUrl.short_url}`;
 
     res.json({
+      _id: newUrl._id,
       original_url: newUrl.original_url,
       short_url: newUrl.short_url,
       test_url: testUrl,
