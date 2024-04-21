@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const { Sequelize, DataTypes } = require("sequelize");
+const pg = require("pg");
 const validURL = require("valid-url");
 const bodyParser = require("body-parser");
 
@@ -10,6 +11,7 @@ const port = process.env.PORT || 3000;
 
 const sequelize = new Sequelize(process.env.POSTGRES_URL, {
   dialect: "postgres",
+  dialectModule: pg,
 });
 
 const Url = sequelize.define("url", {
