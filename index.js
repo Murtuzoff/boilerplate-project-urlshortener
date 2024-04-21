@@ -1,22 +1,101 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const app = express();
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
+const { Sequelize, DataTypes } = require("sequelize");
+const validURL = require("valid-url");
+const bodyParser = require("body-parser");
 
+const app = express();
 const port = process.env.PORT || 3000;
 
+const sequelize = new Sequelize(
+  "postgres://default:bIADht2xf6UT@ep-solitary-cake-a2fss3zi.eu-central-1.aws.neon.tech:5432/verceldb",
+  {
+    dialect: "postgres",
+    dialectOptions: {
+      ssl: {
+        require: true,
+      },
+    },
+  }
+);
+
+const Url = sequelize.define("url", {
+  original_url: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+  },
+  short_url: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    unique: true,
+  },
+});
+
+const connectDatabase = async () => {
+  try {
+    await sequelize.authenticate({ logging: false });
+    await sequelize.sync({ logging: false });
+    console.log("Database Connected");
+  } catch (error) {
+    console.log(`Error: ${error.message}`);
+  }
+};
+
+connectDatabase();
+
 app.use(cors());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use("/public", express.static(`${process.cwd()}/public`));
 
-app.use('/public', express.static(`${process.cwd()}/public`));
-
-app.get('/', function (req, res) {
-  res.sendFile(process.cwd() + '/views/index.html');
+app.get("/", (req, res) => {
+  res.sendFile(process.cwd() + "/views/index.html");
 });
 
-app.get('/api/hello', function (req, res) {
-  res.json({ greeting: 'hello API' });
+app.get("/api/shorturl/:num", async (req, res) => {
+  const num = req.params.num;
+  try {
+    const url = await Url.findOne({ where: { short_url: num } });
+    if (!url) {
+      res.status(404).json({ error: "URL not found" });
+    } else {
+      res.redirect(url.original_url);
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
-app.listen(port, function () {
-  console.log(`Listening on port ${port}`);
+app.post("/api/shorturl", async (req, res) => {
+  const { url } = req.body;
+  if (!validURL.isWebUri(url)) {
+    res.status(400).json({ error: "Invalid URL" });
+    return;
+  }
+
+  try {
+    const count = (await Url.count()) + 1;
+    const [newUrl, created] = await Url.findOrCreate({
+      where: { original_url: url },
+      defaults: { short_url: count },
+    });
+
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+    const testUrl = `${baseUrl}/api/shorturl/${newUrl.short_url}`;
+
+    res.json({
+      original_url: newUrl.original_url,
+      short_url: newUrl.short_url,
+      test_url: testUrl,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
 });
